@@ -1,0 +1,7 @@
+testMode: assertion 
+multi-abi: true
+cryticArgs: ["cache"]
+cryticArgs: ['--solc-remaps', '@=node_modules/@']
+initialize: init.json
+testLimit: 1000
+maxBlockDelay: 604800
