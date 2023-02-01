@@ -4,61 +4,63 @@ pragma solidity 0.6.12;
 import "./Setup.sol";
 
 contract EchidnaUniswap is Setup {
-    function echidnaPendingFeesCorrectlyAndCorrectBalance(uint256 amount) public payable {
-        // assert(address(this).balance == ethAmount);
-
-        // uint delay = 7 days;
-        // if(block.timestamp >= core.getContractStartTimestamp() + delay) {
-
-        // }
-        // assert(false);
-        try core.setContractStartTimestamp(1000) {
-            /* not reverted */
-        } catch {
-            assert(false);
-        }
-
+    function echidnaPendingFeesCorrectlyAndCorrectBalance(address receiver)
+        public
+        payable
+    {
+        core.setContractStartTimestamp(block.timestamp);
         try core.addLiquidity{value: msg.value}(true) {
             /* not reverted */
+            core.setContractStartTimestamp(1000);
+            try core.addLiquidityToUniswapCORExWETHPair() {
+                /* not reverted */
+                try core.claimLPTokens() {
+                    /* not reverted */
+                    try core.setFeeDistributor(address(coreVault)) {
+                        /* not reverted */
+                        uint256 pendingRewardsBefore = coreVault
+                            .pendingRewards();
+                        uint256 balCoreVaultBefore = core.balanceOf(
+                            address(coreVault)
+                        );
+                        uint256 balBefore = core.balanceOf(address(this));
+                        try core.transfer(receiver, balBefore) {
+                            /* not reverted */
+                            uint256 pendingRewardsAfter = coreVault
+                                .pendingRewards();
+                            uint256 balAfter = core.balanceOf(
+                                address(coreVault)
+                            );
+                            assert(
+                                pendingRewardsAfter.sub(pendingRewardsBefore) ==
+                                    balBefore.div(100)
+                            );
+                            assert(
+                                balAfter.sub(balBefore) == balBefore.div(100)
+                            );
+                        } catch {
+                            assert(false);
+                        }
+                    } catch {
+                        assert(false);
+                    }
+                } catch {
+                    assert(false);
+                }
+            } catch Error(string memory reason) {
+                assert(
+                    keccak256(abi.encode(reason)) ==
+                        keccak256(
+                            abi.encode("Liquidity generation already finished")
+                        )
+                );
+            }
         } catch Error(string memory reason) {
             assert(
                 keccak256(abi.encode(reason)) ==
                     keccak256(abi.encode("Liquidity Generation Event over"))
             );
         }
-
-        try core.addLiquidityToUniswapCORExWETHPair() {
-            /* not reverted */
-        } catch Error(string memory reason) {
-            assert(
-                keccak256(abi.encode(reason)) ==
-                    keccak256(abi.encode("Liquidity generation onging"))
-            );
-        }
-
-        try core.claimLPTokens() {
-            /* not reverted */
-        } catch {
-            assert(false);
-        }
-
-        try core.setFeeDistributor(address(coreVault)) {
-            /* not reverted */
-        } catch {
-            assert(false);
-        }
-        uint256 pendingRewardsBefore = coreVault.pendingRewards();
-        uint256 balBefore = core.balanceOf(address(coreVault));
-
-        try core.transfer(address(this), 1) {
-            /* not reverted */
-        } catch {
-            assert(false);
-        }
-        uint256 pendingRewardsAfter = coreVault.pendingRewards();
-        uint256 balAfter = core.balanceOf(address(coreVault));
-        assert(pendingRewardsAfter.sub(pendingRewardsBefore) == 10);
-        assert(balAfter.sub(balBefore) == 10);
     }
 
     function echidnaSetFeeMultiplier(uint8 fee) public {

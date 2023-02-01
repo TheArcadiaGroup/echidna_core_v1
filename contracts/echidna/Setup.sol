@@ -36,9 +36,12 @@ contract Setup {
         coreVault = new CoreVaultMock();
         coreVault.initialize(core, address(this), address(this));
         feeApprover.setCoreVaultAddress(address(coreVault));
-        coreWETHPair = UniswapV2Pair(factory.getPair(address(weth), address(core)));
+        coreWETHPair = UniswapV2Pair(
+            factory.getPair(address(weth), address(core))
+        );
     }
 }
+
 contract CoreVaultMock is CoreVault {
     function getDevFee() public returns (uint16) {
         return DEV_FEE;
@@ -46,8 +49,7 @@ contract CoreVaultMock is CoreVault {
 }
 
 contract CoreMock is CORE {
-    constructor(address router, address factory) public CORE(router, factory) {   
-    }
+    constructor(address router, address factory) public CORE(router, factory) {}
 
     function setContractStartTimestamp(uint256 newBlockNumber) public {
         contractStartTimestamp = newBlockNumber;
@@ -118,11 +120,15 @@ contract UserMock {
         address tokenAddress,
         uint256 _amount,
         address contractAddress
-    ) public {
-        CoreVault(coreVault).setStrategyContractOrDistributionContractAllowance(
+    ) public returns (bool) {
+        (bool b, ) = coreVault.call(
+            abi.encodeWithSignature(
+                "setStrategyContractOrDistributionContractAllowance(address, uint256, address)",
                 tokenAddress,
                 _amount,
                 contractAddress
-            );
+            )
+        );
+        return b;
     }
 }
