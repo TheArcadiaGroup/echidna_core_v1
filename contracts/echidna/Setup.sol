@@ -21,7 +21,7 @@ contract Setup {
     WETH9 weth;
     CoreMock core;
     FeeApprover feeApprover;
-    CoreVault coreVault;
+    CoreVaultMock coreVault;
     UniswapV2Pair coreWETHPair;
 
     constructor() public {
@@ -33,10 +33,15 @@ contract Setup {
         feeApprover.initialize(address(core), address(weth), address(factory));
         feeApprover.setPaused(false);
         core.setShouldTransferChecker(address(feeApprover));
-        coreVault = new CoreVault();
+        coreVault = new CoreVaultMock();
         coreVault.initialize(core, address(this), address(this));
         feeApprover.setCoreVaultAddress(address(coreVault));
         coreWETHPair = UniswapV2Pair(factory.getPair(address(weth), address(core)));
+    }
+}
+contract CoreVaultMock is CoreVault {
+    function getDevFee() public returns (uint16) {
+        return DEV_FEE;
     }
 }
 
