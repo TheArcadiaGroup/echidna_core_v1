@@ -2,6 +2,6 @@ testMode: assertion
 multi-abi: true
 cryticArgs: ["cache"]
 cryticArgs: ['--solc-remaps', '@=node_modules/@']
-initialize: init.json
-testLimit: 5000
+initialize: contracts/echidna/setup.json
+testLimit: 100
 maxBlockDelay: 604800

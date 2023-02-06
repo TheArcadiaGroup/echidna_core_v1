@@ -58,6 +58,10 @@ contract CoreMock is CORE {
     function getContractStartTimestamp() public returns (uint256) {
         return contractStartTimestamp;
     }
+
+    function getLPGenerationCompleted() public returns (bool) {
+        return LPGenerationCompleted;
+    }
 }
 
 contract ERC20Mock is ERC20 {
